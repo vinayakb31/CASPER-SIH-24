@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Price Finder - Search Results</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            position: relative; /* Added for positioning the user info and logout button */
+        }
+
+        h1 {
+            text-align: center;
+            color: #343a40;
+            font-weight: bold;
+        }
+
+        h2 {
+            text-align: center;
+            color: #343a40;
+            font-weight: bold;
+        }
+
+        .results-container {
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #dee2e6;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #e9ecef;
+            color: #343a40;
+        }
+
+        td:nth-child(2) {
+            width: 75%; /* Increased by 50% */
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #0056b3;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px; /* Added spacing between buttons and page indicator */
+        }
+
+        .navigation-buttons a, .navigation-buttons button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .navigation-buttons a:hover, .navigation-buttons button:hover {
+            background-color: #0056b3;
+        }
+
+        .bottom-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .bottom-buttons a, .bottom-buttons button {
+            margin: 0 10px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .bottom-buttons a.logout {
+            background-color: #dc3545;
+        }
+
+        .bottom-buttons a.logout:hover {
+            background-color: #c82333;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: center;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 16px;
+            color: #343a40;
+        }
+
+        .user-info a {
+            display: block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #dc3545;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .user-info a:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-info">
+        <p>Logged in as: {{ current_user.username }}</p>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <a href="/home" class="go-back-button">Go back</a>
+
+    <h1>Automated Price Finder</h1>
+    <h2>Search Results</h2>
+    <p><strong>Item Name:</strong> {{ item_name }}</p>
+    <p><strong>Item Type:</strong> {{ item_type }}</p>
+    <p><strong>Make:</strong> {{ make }}</p>
+    <p><strong>Model:</strong> {{ model }}</p>
+
+    <div class="results-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Product Title</th>
+                    <th>Price</th>
+                    <th>Website Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in product_details %}
+                <tr>
+                    <td>{{ product[0] }}</td>
+                    <td>{{ product[1] }}</td>
+                    <td>{{ product[2] }}</td>
+                    <td><a href="{{ product[4] }}" target="_blank">{{ product[3] }}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="navigation-buttons">
+        <a href="{{ url_for('results', page=page-1, item_name=item_name, item_type=item_type, make=make, model=model) }}" {% if page <= 1 %}style="visibility: hidden;"{% endif %}>Previous</a>
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        <a href="{{ url_for('results', page=page+1, item_name=item_name, item_type=item_type, make=make, model=model) }}" {% if page >= total_pages %}style="visibility: hidden;"{% endif %}>Next</a>
+    </div>
+
+    <div class="bottom-buttons">
+        <!-- Removed the Go back button from here -->
+    </div>
+</body>
+</html>
