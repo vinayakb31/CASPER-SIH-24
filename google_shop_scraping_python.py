@@ -1,43 +1,14 @@
 import requests
+import json
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
 
 
-def otherRates():
-    government_defined_rates = {
-        "Unskilled Labor": 300,                                     # Unskilled labor rate per day
-        "Semi-Skilled Labor": 350,                                  # Semi-skilled labor rate per day
-        "Skilled Labor": 400,                                       # Skilled labor rate per day
-        "Highly Skilled Labor": 500,                                # Highly skilled labor rate per day
-        "Minimum Wage for Agricultural Labor": 225,                 # Minimum wage in agriculture sector
-        "Minimum Wage for Construction Workers": 350,               # Minimum wage in construction
-        "Minimum Wage for Domestic Workers": 200,                   # Minimum wage for domestic workers
-        "MGNREGA Wage": 210,                                        # MGNREGA wage
-        "Service Charge for e-Governance Services": 20,             # Service charge for e-Governance
-        "Motor Transport Workers (Heavy Vehicle Drivers)": 500,     # Heavy vehicle drivers
-        "Security Guard (Without Arms)": 400,                       # Security guards without arms
-        "Data Entry Operator": 450,                                 # Data entry operator
-        "Sweeping & Cleaning Services": 300,                        # Sweeping and cleaning services
-        "Painter (Building and Other Construction)": 500,           # Painters in construction
-        "Electrician": 550,                                         # Electricians
-        "Mason (Construction)": 600,                                # Masons in construction
-        "Carpenter": 550,                                           # Carpenters
-        "Plumber": 500,                                             # Plumbers
-        "Nursing Staff (General Duty)": 700,                        # Nursing staff
-        "Gardener": 350,                                            # Gardeners
-        "Watchman": 350,                                            # Watchmen
-        "Tailor": 400,                                              # Tailors
-        "Cook (Institutional/Industrial)": 450,                     # Cooks in institutional settings
-        "Computer Operator": 500                                    # Computer operators
-    }
-
-
-def SearchAndResponse():
+def SearchAndResponse(search_str):
     global soup
 
-    search_str = str(input("Enter the product name: "))
     search_url = f"https://www.google.com/search?tbm=shop&q={search_str.replace(' ', '+')}"
     HEADERS = ({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0', 'Accepted-Language':'en-US, en;q=0.5'})
 
@@ -46,7 +17,6 @@ def SearchAndResponse():
 
     return soup
 
-# SearchAndResponse(search_str)
 
 def GoogleShopScraping(soup):
     global products_list
@@ -64,16 +34,15 @@ def GoogleShopScraping(soup):
         source_link.append(href_tag.get('href'))
     source_link = ["https://www.google.com"+i for i in source_link]
 
-    
-
     for i in range(len(titles)):
-        products_list.append([titles[i].text.strip(), prices[i].text.strip(), source_name[i].text.strip(), source_link[i]])
+        products_list.append([i+1, titles[i].text.strip(), prices[i].text.strip(), source_name[i].text.strip(), source_link[i]])
     
     return products_list
 
-# GoogleShopScraping(soup)
 
-# ------------   Code works till here   ---------------
+def jsonInfoDump(products_list):
+    with open('product_details.json', 'w') as f:
+        json.dump(products_list, f)
 
 
 def Webpage():
@@ -174,7 +143,6 @@ def Webpage():
             return redirect(url_for('results', item_name=item_name, item_type=item_type, make=make, model=model))
 
         return render_template("home.html")
-
     
     @app.route('/results')
     def results():
@@ -183,7 +151,32 @@ def Webpage():
         make = request.args.get('make')
         model = request.args.get('model')
 
-        return render_template("results.html", item_name=item_name, item_type=item_type, make=make, model=model)
+        SearchAndResponse(str(item_name + model + make))
+        GoogleShopScraping(soup)
+        jsonInfoDump(products_list)
+
+        with open('product_details.json', 'r') as f:
+            product_details = json.load(f)
+
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+
+        start = (page - 1) * per_page
+        end = start + per_page
+
+        if start >= len(product_details):
+            start = len(product_details) - per_page
+            page = (len(product_details) + per_page - 1) // per_page
+
+        if end > len(product_details):
+            end = len(product_details)
+
+        current_products = product_details[start:end]
+        total_pages = (len(product_details) + per_page - 1) // per_page
+
+
+        return render_template("results.html", product_details=current_products,page=page, total_pages=total_pages,
+                               item_name=item_name, item_type=item_type, make=make, model=model)
 
 if __name__ == "__main__":
     app = Flask(__name__)
