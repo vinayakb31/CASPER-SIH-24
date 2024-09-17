@@ -10,16 +10,10 @@
             background: #f8f9fa;
             margin: 0;
             padding: 20px;
-            position: relative; /* Added for positioning the user info and logout button */
+            position: relative; /* For positioning the user info and logout button */
         }
 
-        h1 {
-            text-align: center;
-            color: #343a40;
-            font-weight: bold;
-        }
-
-        h2 {
+        h1, h2 {
             text-align: center;
             color: #343a40;
             font-weight: bold;
@@ -50,7 +44,11 @@
         }
 
         td:nth-child(2) {
-            width: 75%; /* Increased by 50% */
+            width: 50%; /* Increased by 50% */
+        }
+
+        td:nth-child(4) {
+            width: 15%; /* Increase Rating column width */
         }
 
         a {
@@ -67,7 +65,7 @@
             justify-content: center;
             align-items: center;
             margin-top: 20px;
-            gap: 10px; /* Added spacing between buttons and page indicator */
+            gap: 10px;
         }
 
         .navigation-buttons a, .navigation-buttons button {
@@ -84,34 +82,6 @@
 
         .navigation-buttons a:hover, .navigation-buttons button:hover {
             background-color: #0056b3;
-        }
-
-        .bottom-buttons {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .bottom-buttons a, .bottom-buttons button {
-            margin: 0 10px;
-            padding: 10px 15px;
-            border-radius: 5px;
-            text-decoration: none;
-            color: #fff;
-            background-color: #007bff;
-            border: none;
-            cursor: pointer;
-            text-align: center;
-            transition: background-color 0.3s ease;
-        }
-
-        .bottom-buttons a.logout {
-            background-color: #dc3545;
-        }
-
-        .bottom-buttons a.logout:hover {
-            background-color: #c82333;
         }
 
         .user-info {
@@ -143,6 +113,32 @@
         .user-info a:hover {
             background-color: #c82333;
         }
+
+        .sort-by-container {
+            display: flex;
+            justify-content: flex-start; /* Aligns to the left */
+            margin-bottom: 20px; /* Adds margin below sort-by */
+        }
+
+        .search-parameters {
+            margin-bottom: 40px; /* Adds space between "Model" and "Sort By" */
+        }
+
+        .sort-by-container form {
+            display: flex;
+            align-items: center;
+        }
+
+        .sort-by-container label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .sort-by-container select {
+            padding: 5px;
+            font-size: 16px;
+        }
+
     </style>
 </head>
 <body>
@@ -155,28 +151,49 @@
 
     <h1>Automated Price Finder</h1>
     <h2>Search Results</h2>
-    <p><strong>Item Name:</strong> {{ item_name }}</p>
-    <p><strong>Item Type:</strong> {{ item_type }}</p>
-    <p><strong>Make:</strong> {{ make }}</p>
-    <p><strong>Model:</strong> {{ model }}</p>
+
+    <div class="search-parameters">
+        <p><strong>Item Name:</strong> {{ item_name }}</p>
+        <p><strong>Item Type:</strong> {{ item_type }}</p>
+        <p><strong>Make:</strong> {{ make }}</p>
+        <p><strong>Model:</strong> {{ model }}</p>
+    </div>
+
+    <!-- Sort By Drop-down -->
+    <div class="sort-by-container">
+        <form action="{{ url_for('results') }}" method="GET">
+            <!-- Hidden inputs to retain the search information -->
+            <input type="hidden" name="item_name" value="{{ item_name }}">
+            <input type="hidden" name="item_type" value="{{ item_type }}">
+            <input type="hidden" name="make" value="{{ make }}">
+            <input type="hidden" name="model" value="{{ model }}">
+            <input type="hidden" name="page" value="{{ page }}">
+
+            <label for="sort-by">Sort By:</label>
+            <select name="sort_by" id="sort-by" onchange="this.form.submit()">
+                <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Price</option>
+                <option value="ratings" {% if sort_by == 'ratings' %}selected{% endif %}>Ratings</option>
+            </select>
+        </form>
+    </div>
 
     <div class="results-container">
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
                     <th>Product Title</th>
                     <th>Price</th>
-                    <th>Website Name</th>
+                    <th>Ratings</th>
+                    <th>Website Source</th>
                 </tr>
             </thead>
             <tbody>
                 {% for product in product_details %}
                 <tr>
-                    <td>{{ product[0] }}</td>
                     <td>{{ product[1] }}</td>
                     <td>{{ product[2] }}</td>
-                    <td><a href="{{ product[4] }}" target="_blank">{{ product[3] }}</a></td>
+                    <td>{{ product[3] }}</td>
+                    <td><a href="{{ product[5] }}" target="_blank">{{ product[4] }}</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -187,10 +204,6 @@
         <a href="{{ url_for('results', page=page-1, item_name=item_name, item_type=item_type, make=make, model=model) }}" {% if page <= 1 %}style="visibility: hidden;"{% endif %}>Previous</a>
         <span>Page {{ page }} of {{ total_pages }}</span>
         <a href="{{ url_for('results', page=page+1, item_name=item_name, item_type=item_type, make=make, model=model) }}" {% if page >= total_pages %}style="visibility: hidden;"{% endif %}>Next</a>
-    </div>
-
-    <div class="bottom-buttons">
-        <!-- Removed the Go back button from here -->
     </div>
 </body>
 </html>
