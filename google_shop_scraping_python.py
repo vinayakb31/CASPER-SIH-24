@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
+from flask_bcrypt import Bcrypt
 
 
 search_term = []
@@ -21,7 +22,7 @@ def SearchAndResponse(search_term):
     return soup
 
 
-def GoogleShopScraping(soup):
+def ProductScraping(soup):
     global products_list
     products_list = []
     
@@ -30,10 +31,16 @@ def GoogleShopScraping(soup):
     sl_counter = 1
     for i in range(len(span_page)):
         curr_prod = span_page[i]
-        if curr_prod.find('div', {'class':'qSSQfd uqAnbd'}) and curr_prod.find('h3', {'class':'tAxDx'}):
+        # if curr_prod.find('div', {'class':'qSSQfd uqAnbd'}) and curr_prod.find('h3', {'class':'tAxDx'}):
+        if curr_prod.find('h3', {'class':'tAxDx'}):
             title = curr_prod.find('h3', {'class':'tAxDx'})
             price = curr_prod.find('span', {'class':'a8Pemb OFFNJ'})
-            rating = curr_prod.find('div', {'class':'qSSQfd uqAnbd'}).get('aria-label')
+            
+            if curr_prod.find('div', {'class':'qSSQfd uqAnbd'}) is not None:
+                rating = curr_prod.find('div', {'class':'qSSQfd uqAnbd'}).get('aria-label')
+            else:
+                rating = 'N/A'
+
             source_name = curr_prod.find('div', {'class':'aULzUe IuHnof'})
             jumbled_link = curr_prod.find_all('div', {'class':'mnIHsc'})
 
@@ -49,6 +56,14 @@ def GoogleShopScraping(soup):
 
     return products_list
 
+
+def ServiceScraping(soup):
+    global products_list
+    products_list = ['Under Development']
+
+    span_page = soup.find_all('h3', {'class':'tAxDx'})
+
+    return products_list
 
 def jsonInfoDump(products_list):
     with open('product_details.json', 'w') as f:
@@ -66,6 +81,7 @@ def Webpage():
     app.config["SECRET_KEY"] = "Enter your secret key"
 
     db = SQLAlchemy(app)
+    bcrypt = Bcrypt(app)
 
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -73,7 +89,7 @@ def Webpage():
     class Users(UserMixin, db.Model):
         id = db.Column(db.Integer, primary_key=True)
         username = db.Column(db.String(250), unique=True, nullable=False)
-        password = db.Column(db.String(250), nullable=False)
+        password_hash = db.Column(db.String(250), nullable=False)
 
     with app.app_context():
         db.create_all()
@@ -98,7 +114,9 @@ def Webpage():
                 flash("Passwords do not match. Please try again.", "error")
                 return redirect(url_for('register'))
     
-            user = Users(username=username, password=password)
+            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+            print(hashed_password)
+            user = Users(username=username, password_hash=hashed_password)
 
             db.session.add(user)
             db.session.commit()
@@ -114,7 +132,7 @@ def Webpage():
             password = request.form.get("password")
             user = Users.query.filter_by(username=username).first()
 
-            if user and user.password == password:
+            if user and bcrypt.check_password_hash(user.password_hash, password):
                 login_user(user)
                 return redirect(url_for("home"))
             
@@ -166,48 +184,51 @@ def Webpage():
             search_term.append([item_name, model, make])
             search_category.append(item_type)
 
-        print(search_term[-1])
-        print(search_category[-1])
-
         SearchAndResponse(search_term)
-        GoogleShopScraping(soup)
-        jsonInfoDump(products_list)
+        
+        if item_type == 'Other Services':
+            ServiceScraping(soup)
+            
+        else:
+            ProductScraping(soup)
+        
+            jsonInfoDump(products_list)
 
-        with open('product_details.json', 'r') as f:
-            product_details = json.load(f)
+            with open('product_details.json', 'r') as f:
+                product_details = json.load(f)
 
-        sort_by = request.args.get('sort_by', 'price')
-        sort_direction = request.args.get('sort_direction', 'asc')
-        reverse = False
+            sort_by = request.args.get('sort_by', 'price')
+            sort_direction = request.args.get('sort_direction', 'asc')
+            reverse = False
 
-        if sort_by == 'price':
-            reverse = (sort_direction == 'desc')
-            product_details.sort(key=lambda x: x[2], reverse=reverse)
-        elif sort_by == 'ratings':
-            product_details.sort(key=lambda x: x[3], reverse=reverse)
+            if sort_by == 'price':
+                reverse = (sort_direction == 'desc')
+                product_details.sort(key=lambda x: x[2], reverse=reverse)
+            elif sort_by == 'ratings':
+                product_details.sort(key=lambda x: x[3], reverse=reverse)
 
-        for product in product_details:
-            product[2] = f"₹{product[2]:,.2f}"
+            for product in product_details:
+                product[2] = f"₹{product[2]:,.2f}"
 
-        page = request.args.get('page', 1, type=int)
-        per_page = 20
+            page = request.args.get('page', 1, type=int)
+            per_page = 20
 
-        start = (page - 1) * per_page
-        end = start + per_page
+            start = (page - 1) * per_page
+            end = start + per_page
 
-        if start >= len(product_details):
-            start = len(product_details) - per_page
-            page = (len(product_details) + per_page - 1) // per_page
+            if start >= len(product_details):
+                start = len(product_details) - per_page
+                page = (len(product_details) + per_page - 1) // per_page
 
-        if end > len(product_details):
-            end = len(product_details)
+            if end > len(product_details):
+                end = len(product_details)
 
-        current_products = product_details[start:end]
-        total_pages = (len(product_details) + per_page - 1) // per_page
+            current_products = product_details[start:end]
+            total_pages = (len(product_details) + per_page - 1) // per_page
 
 
-        return render_template("results.html", product_details=current_products,page=page, total_pages=total_pages,
-                               item_name=search_term[-1][0], item_type=search_category[-1], make=search_term[-1][2], model=search_term[-1][1], sort_by=sort_by, sort_direction=sort_direction)
+            return render_template("results.html", product_details=current_products,page=page, total_pages=total_pages,
+                                item_name=search_term[-1][0], item_type=search_category[-1], make=search_term[-1][2], model=search_term[-1][1], sort_by=sort_by, sort_direction=sort_direction)
 
 if __name__ == "__main__":
     app = Flask(__name__)
