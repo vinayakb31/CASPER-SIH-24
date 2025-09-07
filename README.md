@@ -1,27 +1,28 @@
-<h1 align="left">Repository for SIH 2024 💻</h1>
+# CASPER-SIH-24
 
-###
+**CASPER (Centralized Automated Solution for Price Estimation & Reasonability)** is a project developed for the Smart India Hackathon 2024.
 
-<h3 align="left">Topic - Centralized Automated Solution for Price Estimation & Reasonability.</h3>
+The solution aims to automate and centralize price estimation and reasonability analysis, enhancing transparency and efficiency in procurement processes.
 
-###
+![CASPER Logo](https://github.com/vinayakb31/CASPER-SIH-24/raw/main/logo.png)
 
-<p align="left">This is a repository for the Smart India Hackathon 2024.<br><br>It contains:<br>- Required files for SIH 2024<br>- Previous versions of the files for backup</p>
+## 🚀 Features
 
-###
+- **Automated Price Estimation**  
+  Utilizes web scraping techniques to gather pricing data from online sources.
 
-<h3 align="left">Languages and Libraries used</h3>
+- **Reasonability Analysis**  
+  Compares estimated prices against market standards to assess reasonability.
 
-###
+- **Centralized Dashboard**  
+  Provides a user-friendly interface for viewing and managing price estimations.
 
-<div align="left">
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" height="40" alt="python logo"  />
-  <img width="12" />
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jupyter/jupyter-original.svg" height="40" alt="jupyter logo"  />
-  <img width="12" />
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlite/sqlite-original.svg" height="40" alt="sqlite logo"  />
-  <img width="12" />
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" height="40" alt="html5 logo"  />
-</div>
+- **Data Backup**  
+  Maintains previous versions of files for reference and backup purposes.
 
-###
+## 🛠️ Technologies Used
+
+- **Python** - Core programming language for backend logic.  
+- **Jupyter Notebook** - Used for data analysis and visualization.  
+- **SQLite** - Lightweight database for storing pricing data.  
+- **HTML5** - Frontend structure for the dashboard interface.
