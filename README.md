@@ -4,7 +4,6 @@
 
 The solution aims to automate and centralize price estimation and reasonability analysis, enhancing transparency and efficiency in procurement processes.
 
-![CASPER Logo](https://github.com/vinayakb31/CASPER-SIH-24/raw/main/logo.png)
 
 ## 🚀 Features
 
